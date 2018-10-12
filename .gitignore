@@ -1,0 +1,12 @@
+node_modules/
+lib/
+npm-debug.log
+.idea/
+*.iml
+dist/
+/target/
+
+# eclipse ignore
+.settings/
+.project
+.classpath

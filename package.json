@@ -1,9 +1,9 @@
 {
-  "name": "olym-front-cli",
-  "version": "1.0.0",
+  "name": "create-olym-front",
+  "version": "0.0.3",
   "description": "create new front app",
   "bin": {
-    "olym-react": "bin/react-cli"
+    "create-olym-front": "bin/react-cli.js"
   },
   "keywords": [
     "creat-react",
@@ -12,6 +12,7 @@
   ],
   "author": "john",
   "license": "MIT",
+  "homepage": "",
   "dependencies": {
     "chalk": "^2.4.1",
     "commander": "^2.19.0",

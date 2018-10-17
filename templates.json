@@ -1,6 +1,16 @@
 {
-  "init": {
+  "john-init": {
     "place": "qianh/front-base",
-    "branch": ""
+    "branch": "",
+    "clone": false,
+    "changePom": true,
+    "changeServerJson": true
+  },
+  "olym-init" : {
+    "place": "direct:http://git.olymtech.com/hong5740/default-front.git",
+    "branch": "",
+    "clone": true,
+    "changePom": true,
+    "changeServerJson": true
   }
 }

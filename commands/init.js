@@ -82,34 +82,60 @@ module.exports = prompt(question).then(({name, template, description, author, po
   const templateName = template;
   const gitPlace = tplList[templateName]['place'];
   const gitBranch = tplList[templateName]['branch'];
+  const clone = tplList[templateName]['clone'];
+  const changePom = tplList[templateName]['changePom'];
+  const changeServerJson = tplList[templateName]['changeServerJson'];
   const spinner = ora('Downloading please wait...');
   spinner.start();
-  download(`${gitPlace}${gitBranch}`, `./${projectName}`, (err) => {
+  download(`${gitPlace}${gitBranch}`, `./${projectName}`, {clone}, (err) => {
     if (err) {
       console.log(chalk.red(err))
       process.exit()
     }
     
-    // update pom.xml 
-    fs.readFile(`./${projectName}/pom.xml`, 'utf8', function(err, data) {
-      if(err) {
-        spinner.stop();
-        console.error(err);
-        return;
-      }
-      const builder = new xml2js.Builder();  // JSON->xml
-      const parser = new xml2js.Parser();  
-      //xml -> json
-      parser.parseString(data, function (err, result) {
+    if(changePom) {
+      // update pom.xml 
+      fs.readFile(`./${projectName}/pom.xml`, 'utf8', function(err, data) {
         if(err) {
           spinner.stop();
           console.error(err);
           return;
         }
-        result.project.artifactId = [projectName];
-        result.project.build[0].finalName = [projectName];
-        const xml = builder.buildObject(result);
-        fs.writeFile(`./${projectName}/pom.xml`, xml, 'utf8', function (err) {
+        const builder = new xml2js.Builder();  // JSON->xml
+        const parser = new xml2js.Parser();  
+        //xml -> json
+        parser.parseString(data, function (err, result) {
+          if(err) {
+            spinner.stop();
+            console.error(err);
+            return;
+          }
+          result.project.artifactId = [projectName];
+          result.project.build[0].finalName = [projectName];
+          const xml = builder.buildObject(result);
+          fs.writeFile(`./${projectName}/pom.xml`, xml, 'utf8', function (err) {
+            if(err) {
+              spinner.stop();
+              console.error(err);
+              return;
+            } 
+          });
+        });
+      });
+    }
+
+    if(changeServerJson) {
+      // update server.json port
+      fs.readFile(`./${projectName}/build/server.json`, 'utf8', function(err, data) {
+        if(err) {
+          spinner.stop();
+          console.error(err);
+          return;
+        }
+        const serverJson = JSON.parse(data);
+        serverJson.port = parseInt(port);
+        var updateServerJson = JSON.stringify(serverJson, null, 2);
+        fs.writeFile(`./${projectName}/build/server.json`, updateServerJson, 'utf8', function (err) {
           if(err) {
             spinner.stop();
             console.error(err);
@@ -117,27 +143,7 @@ module.exports = prompt(question).then(({name, template, description, author, po
           } 
         });
       });
-    });
-
-    // update server.json port
-    fs.readFile(`./${projectName}/build/server.json`, 'utf8', function(err, data) {
-      if(err) {
-        spinner.stop();
-        console.error(err);
-        return;
-      }
-      const serverJson = JSON.parse(data);
-      serverJson.port = parseInt(port);
-      var updateServerJson = JSON.stringify(serverJson, null, 2);
-      fs.writeFile(`./${projectName}/build/server.json`, updateServerJson, 'utf8', function (err) {
-        if(err) {
-          spinner.stop();
-          console.error(err);
-          return;
-        } 
-      });
-    });
-
+    }
     fs.readFile(`./${projectName}/package.json`, 'utf8', function (err, data) {
       if(err) {
         spinner.stop();

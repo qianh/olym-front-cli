@@ -1,6 +1,6 @@
 {
   "name": "create-olym-front",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "description": "create new front app",
   "bin": {
     "create-olym-front": "bin/react-cli.js"

@@ -5,6 +5,7 @@ const download = require('download-git-repo')
 const ora = require('ora')
 const fs = require('fs')
 const path = require('path')
+const xml2js = require('xml2js')
 
 const option =  program.parse(process.argv).args[0]
 const defaultName = typeof option === 'string' ? option : 'react-project'
@@ -53,16 +54,30 @@ const question = [
     type: 'input',
     name: 'author',
     message: 'Author',
-    default: 'project author',
+    default: 'codering',
     validate (val) {
       return true;
     },
     transformer(val) {
       return val;
     }
+  }, {
+    type: 'input',
+    name: 'port',
+    message: 'Port',
+    default: '7000',
+    validate (val) {
+      if(val.match(/\d{4}/g)) { // 校验位数
+        return true;
+      }
+      return "请输入4位数字";
+    },
+    transformer(val) {
+      return val;
+    }
   }
 ]
-module.exports = prompt(question).then(({name, template, description, author}) => {
+module.exports = prompt(question).then(({name, template, description, author, port}) => {
   const projectName = name;
   const templateName = template;
   const gitPlace = tplList[templateName]['place'];
@@ -74,6 +89,55 @@ module.exports = prompt(question).then(({name, template, description, author}) =
       console.log(chalk.red(err))
       process.exit()
     }
+    
+    // update pom.xml 
+    fs.readFile(`./${projectName}/pom.xml`, 'utf8', function(err, data) {
+      if(err) {
+        spinner.stop();
+        console.error(err);
+        return;
+      }
+      const builder = new xml2js.Builder();  // JSON->xml
+      const parser = new xml2js.Parser();  
+      //xml -> json
+      parser.parseString(data, function (err, result) {
+        if(err) {
+          spinner.stop();
+          console.error(err);
+          return;
+        }
+        result.project.artifactId = [projectName];
+        result.project.build[0].finalName = [projectName];
+        const xml = builder.buildObject(result);
+        fs.writeFile(`./${projectName}/pom.xml`, xml, 'utf8', function (err) {
+          if(err) {
+            spinner.stop();
+            console.error(err);
+            return;
+          } 
+        });
+      });
+    });
+
+    // update server.json port
+    fs.readFile(`./${projectName}/build/server.json`, 'utf8', function(err, data) {
+      if(err) {
+        spinner.stop();
+        console.error(err);
+        return;
+      }
+      const serverJson = JSON.parse(data);
+      serverJson.port = parseInt(port);
+      var updateServerJson = JSON.stringify(serverJson, null, 2);
+      fs.writeFile(`./${projectName}/build/server.json`, updateServerJson, 'utf8', function (err) {
+        if(err) {
+          spinner.stop();
+          console.error(err);
+          return;
+        } 
+      });
+    });
+
     fs.readFile(`./${projectName}/package.json`, 'utf8', function (err, data) {
       if(err) {
         spinner.stop();
